@@ -2,7 +2,7 @@ import logging
 import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ContentType
 from aiogram.fsm.storage.memory import MemoryStorage
 from datetime import datetime, timedelta
 from random import shuffle
@@ -77,13 +77,12 @@ async def start_message(message: types.Message):
     ])
     await message.answer('Привет!\nЯ ведущий бот по игре мафия🤵🏻', reply_markup=otvet)
 
-@dp.callback_query_handler()
+
+@dp.callback_query()
 async def callback_handler(call: types.CallbackQuery):
     global chat_list
     if call.data == 'start_game':
         await call.message.answer("Начинаем игру!")
-        # Дополнительная логика для начала игры
-
     elif call.data == 'join':
         chat_id = call.message.chat.id
         chat = chat_list.get(chat_id, {'game_running': False, 'players': {}})
@@ -114,12 +113,25 @@ async def callback_handler(call: types.CallbackQuery):
         if call.from_user.id in chat_list[call.message.chat.id]['players']:
             chat_list[call.message.chat.id]['players'][call.from_user.id]['voice'] = int(call.data)
 
-@dp.message_handler(content_types=types.ContentType.NEW_CHAT_MEMBERS)
-async def welcome_new_member(message: types.Message):
-    if message.new_chat_members[0].id == 5311066881:
-        await message.answer('бабабабаба')
 
-@dp.message_handler(Command(commands=["create_game"]))
+#Сломанная часть который работает некорреткно 
+'''
+@dp.message(ContentType(types.ContentType.NEW_CHAT_MEMBERS))
+async def welcome_new_member(message: types.Message):
+    if message.new_chat_members.id == 7108357216 :
+        await message.answer('Welcome new member')
+'''
+
+@dp.message()
+async def welcome_new_member(message: types.Message):
+    if message.new_chat_members is not None and len(message.new_chat_members) > 0:
+        if message.new_chat_members[0].id == 7108357216:
+            await message.answer('Добро пожаловать новый игрок!')
+
+
+            
+##Обработка командый -----------create_game-----------
+@dp.message(Command(commands=["create_game"]))
 async def get_command(message: types.Message):
     global chat_list, time_now
     chat_id = message.chat.id
@@ -141,7 +153,9 @@ async def get_command(message: types.Message):
     else:
         await message.answer('Игра уже создана или идет.')
 
-@dp.message_handler(Command(commands=["start_game"]))
+
+#Обработка командый -----------start_game-----------, а также само процесс игры
+@dp.message(Command(commands=["start_game"]))
 async def start_game(message: types.Message):
     global chat_list, time_now
     chat_id = message.chat.id
