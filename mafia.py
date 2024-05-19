@@ -1,8 +1,8 @@
 import logging
 import asyncio
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from aiogram.fsm.storage.memory import MemoryStorage
 from datetime import datetime, timedelta
 from random import shuffle
@@ -77,7 +77,7 @@ async def start_message(message: types.Message):
     ])
     await message.answer('Привет!\nЯ ведущий бот по игре мафия🤵🏻', reply_markup=otvet)
 
-@dp.callback_query_handler()
+@dp.callback_query()
 async def callback_handler(call: types.CallbackQuery):
     global chat_list
     if call.data == 'start_game':
@@ -114,12 +114,12 @@ async def callback_handler(call: types.CallbackQuery):
         if call.from_user.id in chat_list[call.message.chat.id]['players']:
             chat_list[call.message.chat.id]['players'][call.from_user.id]['voice'] = int(call.data)
 
-@dp.message_handler(content_types=types.ContentType.NEW_CHAT_MEMBERS)
+@dp.message(Command("start"))
 async def welcome_new_member(message: types.Message):
     if message.new_chat_members[0].id == 5311066881:
         await message.answer('бабабабаба')
 
-@dp.message_handler(Command(commands=["create_game"]))
+@dp.message(Command(commands=["create_game"]))
 async def get_command(message: types.Message):
     global chat_list, time_now
     chat_id = message.chat.id
@@ -141,7 +141,7 @@ async def get_command(message: types.Message):
     else:
         await message.answer('Игра уже создана или идет.')
 
-@dp.message_handler(Command(commands=["start_game"]))
+@dp.message(Command(commands=["start_game"]))
 async def start_game(message: types.Message):
     global chat_list, time_now
     chat_id = message.chat.id
